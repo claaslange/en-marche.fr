@@ -3,6 +3,7 @@
 namespace Tests\AppBundle\Controller\EnMarche;
 
 use AppBundle\DataFixtures\ORM\LoadAdherentData;
+use AppBundle\DataFixtures\ORM\LoadAdherentEmailSubscriptionHistoryData;
 use AppBundle\DataFixtures\ORM\LoadCitizenProjectCommentData;
 use AppBundle\DataFixtures\ORM\LoadCitizenProjectData;
 use AppBundle\DataFixtures\ORM\LoadEventCategoryData;
@@ -153,6 +154,13 @@ class AdherentControllerTest extends MysqlWebTestCase
         $oldLatitude = $adherent->getLatitude();
         $oldLongitude = $adherent->getLongitude();
 
+        $oldHistories = $this->getAdherentEmailSubscriptionHistoryRepository()->findByAdherent($adherent, false);
+
+        $this->assertSame(9, count($oldHistories));
+        foreach ($oldHistories as $history) {
+            $this->assertSame('73', $history->getReferentTag()->getCode());
+        }
+
         $crawler = $this->client->request(Request::METHOD_GET, '/parametres/mon-compte/modifier');
 
         $inputPattern = 'input[name="adherent[%s]"]';
@@ -293,6 +301,17 @@ class AdherentControllerTest extends MysqlWebTestCase
         $this->assertNotSame($oldLongitude, $newLongitude);
         self::assertCount(1, $adherent->getReferentTags());
         self::assertAdherentHasReferentTag($adherent, '06');
+
+        $histories = $this->getAdherentEmailSubscriptionHistoryRepository()->findByAdherent($adherent, false);
+
+        $this->assertSame(18, count($histories));
+        foreach ($histories as $history) {
+            if ($history->getUnsubscribedAt()) {
+                $this->assertSame('73', $history->getReferentTag()->getCode());
+            } else {
+                $this->assertSame('06', $history->getReferentTag()->getCode());
+            }
+        }
     }
 
     public function testEditAdherentInterests(): void
@@ -433,7 +452,7 @@ class AdherentControllerTest extends MysqlWebTestCase
                 'emails_subscriptions' => [
                     AdherentEmailSubscription::SUBSCRIBED_EMAILS_MAIN,
                     AdherentEmailSubscription::SUBSCRIBED_EMAILS_REFERENTS,
-                    false,
+                    AdherentEmailSubscription::SUBSCRIBED_EMAILS_LOCAL_HOST,
                     false,
                 ],
 //                'emails_subscriptions' => [
@@ -454,7 +473,7 @@ class AdherentControllerTest extends MysqlWebTestCase
         $this->manager->clear();
         $adherent = $this->getAdherentRepository()->findOneByEmail('carl999@example.fr');
 
-        $this->assertFalse($adherent->hasSubscribedLocalHostEmails());
+        $this->assertTrue($adherent->hasSubscribedLocalHostEmails());
         $this->assertTrue($adherent->hasEmailSubscription(AdherentEmailSubscription::SUBSCRIBED_EMAILS_MOVEMENT_INFORMATION));
 
 //      CANARY
@@ -466,6 +485,58 @@ class AdherentControllerTest extends MysqlWebTestCase
         $this->assertTrue($adherent->hasEmailSubscription(AdherentEmailSubscription::SUBSCRIBED_EMAILS_DONATOR_INFORMATION));
         $this->assertTrue($adherent->hasEmailSubscription(AdherentEmailSubscription::SUBSCRIBED_EMAILS_REFERENTS));
         $this->assertFalse($adherent->hasCitizenProjectCreationEmailSubscription());
+
+        $histories = $this->getAdherentEmailSubscriptionHistoryRepository()->findByAdherent($adherent);
+
+        $this->assertSame(9, count($histories));
+
+        // Unsubscribe from 'subscribed_emails_local_host' and 'subscribed_emails_referents'
+        $this->client->submit($crawler->selectButton('adherent_email_subscription[submit]')->form(), [
+            'adherent_email_subscription' => [
+                'emails_subscriptions' => [
+                    AdherentEmailSubscription::SUBSCRIBED_EMAILS_MAIN,
+                    false,
+                    false,
+                    false,
+                ],
+            ],
+        ]);
+
+        $this->assertClientIsRedirectedTo('/parametres/mon-compte/preferences-des-emails', $this->client);
+
+        $this->manager->clear();
+        $histories = $this->getAdherentEmailSubscriptionHistoryRepository()->findByAdherent($adherent);
+        $historiesHost = $this->getAdherentEmailSubscriptionHistoryRepository()->findAllByAdherentAndType($adherent, AdherentEmailSubscription::SUBSCRIBED_EMAILS_LOCAL_HOST);
+        $historiesReferents = $this->getAdherentEmailSubscriptionHistoryRepository()->findAllByAdherentAndType($adherent, AdherentEmailSubscription::SUBSCRIBED_EMAILS_REFERENTS);
+
+        $this->assertSame(7, count($histories));
+        $this->assertSame(1, count($historiesHost));
+        $this->assertSame(1, count($historiesReferents));
+        $this->assertNotNull($historiesHost[0]->getUnsubscribedAt());
+        $this->assertNotNull($historiesReferents[0]->getUnsubscribedAt());
+
+        // Re-subscribe to 'subscribed_emails_local_host' and 'subscribed_emails_referents'
+        $this->client->submit($crawler->selectButton('adherent_email_subscription[submit]')->form(), [
+            'adherent_email_subscription' => [
+                'emails_subscriptions' => [
+                    AdherentEmailSubscription::SUBSCRIBED_EMAILS_MAIN,
+                    AdherentEmailSubscription::SUBSCRIBED_EMAILS_REFERENTS,
+                    AdherentEmailSubscription::SUBSCRIBED_EMAILS_LOCAL_HOST,
+                    false,
+                ],
+            ],
+        ]);
+
+        $this->assertClientIsRedirectedTo('/parametres/mon-compte/preferences-des-emails', $this->client);
+
+        $this->manager->clear();
+        $histories = $this->getAdherentEmailSubscriptionHistoryRepository()->findByAdherent($adherent);
+        $historiesHost = $this->getAdherentEmailSubscriptionHistoryRepository()->findAllByAdherentAndType($adherent, AdherentEmailSubscription::SUBSCRIBED_EMAILS_LOCAL_HOST);
+        $historiesReferents = $this->getAdherentEmailSubscriptionHistoryRepository()->findAllByAdherentAndType($adherent, AdherentEmailSubscription::SUBSCRIBED_EMAILS_REFERENTS);
+
+        $this->assertSame(9, count($histories));
+        $this->assertSame(2, count($historiesHost));
+        $this->assertSame(2, count($historiesReferents));
     }
 
     public function testAnonymousUserCannotCreateCitizenProject(): void
@@ -902,6 +973,7 @@ class AdherentControllerTest extends MysqlWebTestCase
             LoadEventData::class,
             LoadCitizenProjectData::class,
             LoadCitizenProjectCommentData::class,
+            LoadAdherentEmailSubscriptionHistoryData::class,
         ]);
 
         $this->committeeRepository = $this->getCommitteeRepository();

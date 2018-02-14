@@ -3,6 +3,8 @@
 namespace AppBundle\Form;
 
 use AppBundle\Entity\Adherent;
+use AppBundle\Form\EventListener\AdherentEmailSubscriptionListener;
+use AppBundle\History\AdherentEmailSubscriptionHistoryManager;
 use AppBundle\Membership\AdherentEmailSubscription;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -16,6 +18,13 @@ use Symfony\Component\Validator\Constraints\Choice;
 
 class AdherentEmailSubscriptionType extends AbstractType
 {
+    private $historyManager;
+
+    public function __construct(AdherentEmailSubscriptionHistoryManager $historyManager)
+    {
+        $this->historyManager = $historyManager;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
@@ -45,6 +54,8 @@ class AdherentEmailSubscriptionType extends AbstractType
         if ($options['with_submit_button']) {
             $builder->add('submit', SubmitType::class, ['label' => 'Enregistrer les modifications']);
         }
+
+        $builder->addEventSubscriber(new AdherentEmailSubscriptionListener($this->historyManager));
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
             $formData = $event->getData();

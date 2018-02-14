@@ -73,6 +73,7 @@
         <service id="AppBundle\Form\EventListener\AmpSynchronisedListener"/>
         <service id="AppBundle\Form\EventRegistrationType"/>
         <service id="AppBundle\Form\ColorChoiceType"/>
+        <service id="AppBundle\Form\AdherentEmailSubscriptionType"/>
 
         <!-- GeoCoder -->
         <service id="GeoIp2\WebService\Client">
@@ -127,5 +128,8 @@
 
         <!-- UserDocument -->
         <service id="AppBundle\UserDocument\UserDocumentManager" public="true" />
+
+        <!-- History -->
+        <service id="AppBundle\History\AdherentEmailSubscriptionHistoryManager" />
     </services>
 </container>

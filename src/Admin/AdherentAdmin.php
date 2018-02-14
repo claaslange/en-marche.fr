@@ -3,6 +3,7 @@
 namespace AppBundle\Admin;
 
 use AppBundle\Entity\Adherent;
+use AppBundle\History\AdherentEmailSubscriptionHistoryManager;
 use AppBundle\Entity\BoardMember\BoardMember;
 use AppBundle\Entity\BoardMember\Role;
 use AppBundle\Entity\CommitteeMembership;
@@ -44,12 +45,19 @@ class AdherentAdmin extends AbstractAdmin
     ];
 
     private $dispatcher;
+    private $emailSubscriptionChanged;
 
-    public function __construct($code, $class, $baseControllerName, EventDispatcherInterface $dispatcher)
-    {
+    public function __construct(
+        $code,
+        $class,
+        $baseControllerName,
+        EventDispatcherInterface $dispatcher,
+        AdherentEmailSubscriptionHistoryManager $emailSubscriptionHistoryManager
+    ) {
         parent::__construct($code, $class, $baseControllerName);
 
         $this->dispatcher = $dispatcher;
+        $this->emailSubscriptionHistoryManager = $emailSubscriptionHistoryManager;
     }
 
     public function getTemplate($name)
@@ -418,8 +426,23 @@ class AdherentAdmin extends AbstractAdmin
     /**
      * @param Adherent $object
      */
+    public function preUpdate($object)
+    {
+        $em = $this->getModelManager()->getEntityManager($this->getClass());
+        $original = $em->getUnitOfWork()->getOriginalEntityData($object);
+        $this->emailSubscriptionChanged = count(array_diff($original['emailsSubscriptions'], $object->getEmailsSubscriptions())) > 0
+            || count(array_diff($object->getEmailsSubscriptions(), $original['emailsSubscriptions'])) > 0;
+    }
+
+    /**
+     * @param Adherent $object
+     */
     public function postUpdate($object)
     {
+        if ($this->emailSubscriptionChanged) {
+            $this->emailSubscriptionHistoryManager->createOrUpdateHistory($object);
+        }
+
         $this->dispatcher->dispatch(UserEvents::USER_UPDATED, new UserEvent($object));
     }
 

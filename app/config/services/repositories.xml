@@ -202,5 +202,7 @@
             <factory service="doctrine" method="getRepository" />
             <argument>AppBundle\Entity\ReferentTag</argument>
         </service>
+
+        <service id="AppBundle\Repository\AdherentEmailSubscriptionHistoryRepository" />
     </services>
 </container>
