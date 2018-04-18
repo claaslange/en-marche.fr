@@ -1,12 +1,28 @@
 {% extends 'adherent/layout.twig' %}
 
+{% block flash_message %}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="flash" id="{{ label }}-flashes">
+                <div class="flash__inner">{{ message|trans|raw }}</div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+{% endblock %}
+
 {% block adherent_profile_form %}
     <h2>Mes dons</h2>
 
     {% if donations %}
         <div class="b__nudge--top b__nudge--bottom">
             Merci pour votre engagement à nos côtés ! <br/>
-            Votre dernier don a été fait {{ donations|first.donatedAt|ago }}. <a href="{{ path('donation_index') }}">Faire un nouveau don</a>.
+            Votre dernier don a été fait {{ donations|first.donatedAt|ago }}.
+            {% if subscribed_donations %}
+                <a href="{{ path('donation_subscription_cancel') }}">Arréter mon don mensuel</a>.
+                Prochaine échéance du don mensuel de {{ subscribed_donations|first.amountInEuros }}€ le {{ subscribed_donations|first.nextDonationAt|date('d M Y') }}
+            {% else %}
+                <a href="{{ path('donation_index') }}">Faire un nouveau don</a>.
+            {% endif %}
             <div class="b__nudge--top text--small text--gray">
                 Veuillez noter que :
                 <ol>
@@ -25,10 +41,13 @@
                     <th>
                         Montant
                     </th>
+                    <th>
+                        Type
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                {% for donation in donations|reverse %}
+                {% for donation in donations %}
                     <tr>
                         <td>
                             {{ donation.donatedAt|date('d M Y') }}
@@ -36,6 +55,17 @@
                         <td>
                             {{ donation.amountInEuros }} €
                         </td>
+                        <td>
+                            {% if donation.duration %}
+                                {% if donation.subscriptionEndedAt %}
+                                    Souscription don mensuel arrété le {{ donation.subscriptionEndedAt|date('d M Y h:i') }}
+                                {% else %}
+                                    Souscription don mensuel.
+                                {% endif %}
+                            {% else %}
+                                Don ponctuel
+                            {% endif %}
+                        </td
                     </tr>
                 {% endfor %}
             </tbody>

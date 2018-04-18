@@ -7,6 +7,7 @@ use AppBundle\Entity\Donation;
 use AppBundle\Exception\InvalidDonationCallbackException;
 use AppBundle\Exception\InvalidDonationPayloadException;
 use AppBundle\Exception\InvalidDonationStatusException;
+use Cocur\Slugify\Slugify;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
@@ -43,10 +44,12 @@ class DonationRequestUtils
     ];
 
     private $locator;
+    private $slugify;
 
-    public function __construct(ServiceLocator $locator)
+    public function __construct(ServiceLocator $locator, Slugify $slugify)
     {
         $this->locator = $locator;
+        $this->slugify = $slugify;
     }
 
     /**
@@ -111,6 +114,14 @@ class DonationRequestUtils
             'status' => self::PAYBOX_SUCCESS === $code ? 'effectue' : 'erreur',
             '_status_token' => (string) $this->getTokenManager()->getToken(self::STATUS_TOKEN),
         ];
+    }
+
+    // TODO: create a test
+    public function buildDonationReference(Donation $donation): string
+    {
+        return $donation->getUuid()->toString()
+            .'_'.$this->slugify->slugify($donation->getFullName())
+            .PayboxPaymentSubscription::getCommandSuffix($donation->getAmount(), $donation->getDuration());
     }
 
     private function hydrateFromRetryPayload(DonationRequest $request, string $payload): DonationRequest

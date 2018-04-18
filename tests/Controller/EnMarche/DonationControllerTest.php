@@ -31,14 +31,14 @@ class DonationControllerTest extends SqliteWebTestCase
 
     public function getDonationSubscriptions(): iterable
     {
-        yield [PayboxPaymentSubscription::NONE];
-        yield [PayboxPaymentSubscription::UNLIMITED];
+        yield 'None' => [PayboxPaymentSubscription::NONE];
+        yield 'Unlimited' => [PayboxPaymentSubscription::UNLIMITED];
     }
 
     public function getInvalidSubscriptionsUrl(): iterable
     {
-        yield ['/don/coordonnees?montant=30&abonnement=42']; // invalid subscription
-        yield ['/don/coordonnees?abonnement=-1']; // without amount
+        yield 'invalid subscription' => ['/don/coordonnees?montant=30&abonnement=42'];
+        yield 'without amount' => ['/don/coordonnees?abonnement=-1'];
     }
 
     public function testPayboxPreprodIsHealthy()
@@ -87,6 +87,7 @@ class DonationControllerTest extends SqliteWebTestCase
             ],
         ]));
 
+        $this->assertStatusCode(302, $this->client);
         // Donation should have been saved
         $this->assertCount(1, $donations = $this->donationRepository->findAll());
         $this->assertInstanceOf(Donation::class, $donation = $donations[0]);

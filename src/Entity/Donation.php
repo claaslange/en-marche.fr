@@ -73,14 +73,25 @@ class Donation implements GeoPointInterface
     private $clientIp;
 
     /**
+     * @var \DateTime|null
+     *
      * @ORM\Column(type="datetime", nullable=true)
      */
     private $donatedAt;
 
     /**
+     * @var \DateTime
+     *
      * @ORM\Column(type="datetime")
      */
     private $createdAt;
+
+    /**
+     * @var \DateTime|null
+     *
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $subscriptionEndedAt;
 
     public function __construct(
         UuidInterface $uuid,
@@ -125,6 +136,11 @@ class Donation implements GeoPointInterface
         if ('00000' === $this->payboxResultCode) {
             $this->donatedAt = new \DateTime();
         }
+    }
+
+    public function subscriptionEnded(): void
+    {
+        $this->setSubscriptionEndedAt(new \DateTime());
     }
 
     public function isFinished(): bool
@@ -241,5 +257,32 @@ class Donation implements GeoPointInterface
         }
 
         return $payload;
+    }
+
+    public function getSubscriptionEndedAt(): ?\DateTime
+    {
+        return $this->subscriptionEndedAt;
+    }
+
+    public function setSubscriptionEndedAt(?\DateTime $subscriptionEndedAt): void
+    {
+        $this->subscriptionEndedAt = $subscriptionEndedAt;
+    }
+
+    public function nextDonationAt(): \DateTime
+    {
+        $day = $this->donatedAt->format('d');
+        $dayNow = date('d');
+        if ($day > $dayNow) {
+            $strDay = $this->donatedAt->format('Y/m/_ h:i:s');
+        } else {
+            $strDay = $this->donatedAt->format('Y/-/_ h:i:s');
+            $nextMonth = new \DateTime();
+            $nextMonth->modify('+1 month');
+            $strDay = str_replace('-', $nextMonth->format('m'), $strDay);
+        }
+        $strDay = str_replace('_', $day, $strDay);
+
+        return \DateTime::createFromFormat('Y/m/d h:i:s', $strDay);
     }
 }
