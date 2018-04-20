@@ -2,6 +2,7 @@
 
 namespace AppBundle\DataFixtures\ORM;
 
+use AppBundle\Donation\PayboxPaymentSubscription;
 use AppBundle\Entity\Adherent;
 use AppBundle\Entity\Donation;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -54,9 +55,34 @@ class LoadDonationData extends Fixture
         $reflectDonationAt->setValue($donation2, new \DateTime('-1 day'));
         $reflectDonationAt->setAccessible(false);
 
+        /** @var Adherent $adherent1 */
+        $adherent1 = $this->getReference('adherent-1');
+
+        $donationNormal = $this->create($adherent1);
+        $donationMonthly = $this->create($adherent1, 42., PayboxPaymentSubscription::UNLIMITED);
+
         $manager->persist($donation1);
         $manager->persist($donation2);
+        $manager->persist($donationNormal);
+        $manager->persist($donationMonthly);
+
         $manager->flush();
+    }
+
+    public function create(Adherent $adherent, float $amount = 50.0, int $duration = PayboxPaymentSubscription::NONE): Donation
+    {
+        return new Donation(
+            Uuid::uuid4(),
+            $amount * 100,
+            $adherent->getGender(),
+            $adherent->getFirstName(),
+            $adherent->getLastName(),
+            $adherent->getEmailAddress(),
+            $adherent->getPostAddress(),
+            $adherent->getPhone(),
+            '127.0.0.1',
+            $duration
+        );
     }
 
     public function getDependencies()

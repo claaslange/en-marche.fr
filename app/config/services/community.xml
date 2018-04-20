@@ -9,6 +9,7 @@
 
         <service id="AppBundle\Donation\DonationRequestUtils">
             <argument type="service" id="app.donation_request.utils.locator" />
+            <argument type="service" id="session"/>
         </service>
 
         <service id="app.donation_request.utils.locator" class="Symfony\Component\DependencyInjection\ServiceLocator">

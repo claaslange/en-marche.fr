@@ -41,7 +41,7 @@ class DonationController extends Controller
      * @Route("/coordonnees", defaults={"_enable_campaign_silence"=true}, name="donation_informations")
      * @Method({"GET", "POST"})
      */
-    public function informationsAction(Request $request)
+    public function informationsAction(Request $request, DonationRequestUtils $donationRequestUtils)
     {
         if (!$amount = $request->query->get('montant')) {
             return $this->redirectToRoute('donation_index');
@@ -53,19 +53,25 @@ class DonationController extends Controller
             return $this->redirectToRoute('donation_index');
         }
 
-        $donationRequest = $this->get(DonationRequestUtils::class)
-            ->createFromRequest($request, (float) $amount, $subscription, $this->getUser())
-        ;
+        $donationRequest = $donationRequestUtils->createFromRequest(
+            $request,
+            (float) $amount,
+            $subscription,
+            $this->getUser()
+        );
 
         $form = $this->createForm(DonationRequestType::class, $donationRequest, ['locale' => $request->getLocale()]);
 
         if ($form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             $this->get('app.donation_request.handler')->handle($donationRequest);
+            $donationRequestUtils->resetDonationRequest();
 
             return $this->redirectToRoute('donation_pay', [
                 'uuid' => $donationRequest->getUuid()->toString(),
             ]);
         }
+
+        $donationRequestUtils->saveDonationRequest($donationRequest);
 
         return $this->render('donation/informations.html.twig', [
             'form' => $form->createView(),

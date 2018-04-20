@@ -10,11 +10,23 @@ use libphonenumber\PhoneNumber;
 use Misd\PhoneNumberBundle\Validator\Constraints\PhoneNumber as AssertPhoneNumber;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * TODO: add endSubscriptionAt in the list when end subscription will be merged.
+ *
+ * @UniqueEntity(
+ *     service="AppBundle\Validator\UniqueDonationSubscriptionValidator",
+ *     message="donation.subscription.not_unique",
+ *     fields={
+ *     "emailAddress",
+ *     "duration"
+ *     })
+ */
 class DonationRequest
 {
-    const DEFAULT_AMOUNT = 50.0;
+    public const DEFAULT_AMOUNT = 50.0;
 
     private $uuid;
 

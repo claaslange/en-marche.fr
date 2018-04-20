@@ -10,6 +10,7 @@ use AppBundle\Exception\InvalidDonationStatusException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -43,10 +44,12 @@ class DonationRequestUtils
     ];
 
     private $locator;
+    private $session;
 
-    public function __construct(ServiceLocator $locator)
+    public function __construct(ServiceLocator $locator, Session $session)
     {
         $this->locator = $locator;
+        $this->session = $session;
     }
 
     /**
@@ -55,6 +58,10 @@ class DonationRequestUtils
     public function createFromRequest(Request $request, float $amount, int $duration, ?Adherent $currentUser): DonationRequest
     {
         $clientIp = $request->getClientIp();
+
+        if ($donation = $this->session->get('donation_request')) {
+            return $donation;
+        }
 
         if ($currentUser) {
             $donation = DonationRequest::createFromAdherent($currentUser, $clientIp, $amount, $duration);
@@ -67,6 +74,16 @@ class DonationRequestUtils
         }
 
         return $donation;
+    }
+
+    public function saveDonationRequest(DonationRequest $donationRequest): void
+    {
+        $this->session->set('donation_request', $donationRequest);
+    }
+
+    public function resetDonationRequest(): void
+    {
+        $this->session->remove('donation_request');
     }
 
     public function buildCallbackParameters()

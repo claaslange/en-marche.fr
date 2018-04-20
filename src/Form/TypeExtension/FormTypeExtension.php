@@ -22,6 +22,7 @@ class FormTypeExtension extends AbstractTypeExtension
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
         $view->vars['form_full'] = $options['form_full'];
+        $view->vars['error_raw'] = $options['error_raw'];
     }
 
     public function configureOptions(OptionsResolver $resolver)
@@ -30,9 +31,11 @@ class FormTypeExtension extends AbstractTypeExtension
             ->setDefaults([
                 'cast_null_to_string' => false,
                 'form_full' => false,
+                'error_raw' => false,
             ])
             ->setAllowedTypes('cast_null_to_string', 'bool')
             ->setAllowedTypes('form_full', 'bool')
+            ->setAllowedTypes('error_raw', 'bool')
         ;
     }
 

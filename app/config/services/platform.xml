@@ -350,6 +350,13 @@
         <service id="AppBundle\Validator\PayboxSubscriptionValidator">
             <tag name="validator.constraint_validator" />
         </service>
+        <service id="AppBundle\Validator\UniqueDonationSubscriptionValidator">
+            <tag name="validator.constraint_validator" />
+            <argument type="service" id="AppBundle\Repository\DonationRepository"/>
+            <argument type="service" id="form.property_accessor"/>
+            <argument type="service" id="router"/>
+            <argument type="service" id="request_stack"/>
+        </service>
 
         <!-- Sync with API -->
 
