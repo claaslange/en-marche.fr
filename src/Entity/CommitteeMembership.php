@@ -184,6 +184,11 @@ class CommitteeMembership
         return self::COMMITTEE_FOLLOWER === $this->privilege;
     }
 
+    public function getPrivilege(): string
+    {
+        return $this->privilege;
+    }
+
     /**
      * Returns whether or not this membership enables the adherent to host a
      * committee.

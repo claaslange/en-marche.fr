@@ -26,6 +26,7 @@ use AppBundle\Entity\ProcurationProxy;
 use AppBundle\Entity\ProcurationRequest;
 use AppBundle\Entity\PurchasingPowerChoice;
 use AppBundle\Entity\PurchasingPowerInvitation;
+use AppBundle\Entity\Reporting\CommitteeMembershipEvent;
 use AppBundle\Entity\Summary;
 use AppBundle\Entity\TonMacronChoice;
 use AppBundle\Entity\TonMacronFriendInvitation;
@@ -56,6 +57,7 @@ use AppBundle\Repository\TonMacronChoiceRepository;
 use AppBundle\Repository\TonMacronFriendInvitationRepository;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\Common\Persistence\ObjectRepository;
+use Doctrine\ORM\EntityRepository;
 use League\Flysystem\Filesystem;
 use League\Glide\Server;
 use libphonenumber\PhoneNumber;
@@ -169,6 +171,11 @@ trait TestHelperTrait
     public function getCommitteeMembershipRepository(): CommitteeMembershipRepository
     {
         return $this->getRepository(CommitteeMembership::class);
+    }
+
+    public function getCommitteeMembershipEventRepository(): EntityRepository
+    {
+        return $this->getRepository(CommitteeMembershipEvent::class);
     }
 
     public function getEventRegistrationRepository(): EventRegistrationRepository

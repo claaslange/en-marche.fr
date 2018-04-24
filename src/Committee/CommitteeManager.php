@@ -8,13 +8,18 @@ use AppBundle\Collection\AdherentCollection;
 use AppBundle\Entity\Committee;
 use AppBundle\Entity\CommitteeFeedItem;
 use AppBundle\Entity\CommitteeMembership;
+use AppBundle\Entity\ReferentTag;
+use AppBundle\Entity\Reporting\CommitteeMembershipAction;
+use AppBundle\Entity\Reporting\CommitteeMembershipEvent;
 use AppBundle\Exception\CommitteeMembershipException;
 use AppBundle\Geocoder\Coordinates;
 use AppBundle\Coordinator\Filter\CommitteeFilter;
+use AppBundle\Referent\ManagedAreaUtils;
 use AppBundle\Repository\AdherentRepository;
 use AppBundle\Repository\CommitteeFeedItemRepository;
 use AppBundle\Repository\CommitteeMembershipRepository;
 use AppBundle\Repository\CommitteeRepository;
+use AppBundle\Repository\ReferentTagRepository;
 use Doctrine\Common\Persistence\ManagerRegistry;
 use Doctrine\Common\Persistence\ObjectManager;
 use Doctrine\ORM\Tools\Pagination\Paginator;
@@ -357,7 +362,9 @@ class CommitteeManager
     public function followCommittee(Adherent $adherent, Committee $committee, $flush = true): void
     {
         $manager = $this->getManager();
-        $manager->persist($adherent->followCommittee($committee));
+        $manager->persist($membership = $adherent->followCommittee($committee));
+
+        $manager->persist($this->createCommitteeMembershipEvent($committee, $membership, CommitteeMembershipAction::JOIN()));
 
         if ($flush) {
             $manager->flush();
@@ -391,6 +398,8 @@ class CommitteeManager
         $manager->remove($membership);
         $committee->decrementMembersCount();
 
+        $manager->persist($this->createCommitteeMembershipEvent($committee, $membership, CommitteeMembershipAction::LEAVE()));
+
         if ($flush) {
             $manager->flush();
         }
@@ -419,6 +428,11 @@ class CommitteeManager
     private function getAdherentRepository(): AdherentRepository
     {
         return $this->registry->getRepository(Adherent::class);
+    }
+
+    private function getReferentTagRepository(): ReferentTagRepository
+    {
+        return $this->registry->getRepository(ReferentTag::class);
     }
 
     public function countApprovedCommittees(): int
@@ -478,5 +492,15 @@ class CommitteeManager
     public function getCommitteeSupervisor(Committee $committee): ?Adherent
     {
         return $this->getMembershipRepository()->findSupervisor($committee->getUuid()->toString());
+    }
+
+    private function createCommitteeMembershipEvent(Committee $committee, $membership, CommitteeMembershipAction $action): CommitteeMembershipEvent
+    {
+        return new CommitteeMembershipEvent(
+            $membership,
+            $committee,
+            $this->getReferentTagRepository()->findOneByCode(ManagedAreaUtils::getCodeFromCommittee($committee)),
+            $action
+        );
     }
 }
