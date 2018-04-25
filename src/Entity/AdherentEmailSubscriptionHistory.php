@@ -23,6 +23,8 @@ class AdherentEmailSubscriptionHistory
     private $id;
 
     /**
+     * @var Adherent|null
+     *
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Adherent")
      * @ORM\JoinColumn(onDelete="SET NULL")
      */
@@ -52,13 +54,6 @@ class AdherentEmailSubscriptionHistory
      */
     private $unsubscribedAt;
 
-    /**
-     * @param Adherent    $adherent
-     * @param string      $subscribedEmailsType
-     * @param ReferentTag $referentTag
-     * @param \DateTime   $subscribedAt
-     * @param \DateTime   $unsubscribedAt
-     */
     public function __construct(
         Adherent $adherent,
         string $subscribedEmailsType,
@@ -78,12 +73,12 @@ class AdherentEmailSubscriptionHistory
         return $this->id;
     }
 
-    public function getAdherent(): Adherent
+    public function getAdherent(): ?Adherent
     {
         return $this->adherent;
     }
 
-    public function setAdherent(Adherent $adherent)
+    public function setAdherent(Adherent $adherent): void
     {
         $this->adherent = $adherent;
     }

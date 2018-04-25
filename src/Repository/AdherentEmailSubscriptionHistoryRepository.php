@@ -26,6 +26,7 @@ class AdherentEmailSubscriptionHistoryRepository extends ServiceEntityRepository
             ->createQueryBuilder('h')
             ->where('h.adherent = :adherent')
             ->setParameter('adherent', $adherent)
+            ->orderBy('h.subscribedAt', 'DESC')
         ;
 
         if ($withoutInactives) {

@@ -46,6 +46,7 @@ class AdherentAdmin extends AbstractAdmin
 
     private $dispatcher;
     private $emailSubscriptionChanged;
+    private $emailSubscriptionHistoryManager;
 
     public function __construct(
         $code,
