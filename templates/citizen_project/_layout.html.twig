@@ -26,19 +26,18 @@
                 });
             {% endif %}
         });
-
     </script>
 {% endblock %}
 {% block content %}
     <main class="citizen-project">
         <header class="background--purple">
             {% if citizen_project.hasImageUploaded %}
-                <div class="l__wrapper l__row space--60-0"
+                <div class="citizen-project--bkg"
                      style="background-image:url('{{ asset(citizen_project.getAssetImagePath) }}')">
              {% else %}
                 <div class="l__wrapper l__row space--60-0">
              {% endif %}
-                <div class="l__col text--white">
+                <div class="l__wrapper space--60-0 text--white l__row--h-start">
                     <div class="b__nudge--bottom-larger">
                         <ul class="text--small b__nudge--bottom-tiny list__links list__links--vertical-align list__links--margin-right">
                             <li class="text--body text--small text--uppercase">Projet citoyen</li>
