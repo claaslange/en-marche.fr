@@ -14,9 +14,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-class GenerateCommitteeMembershipEventsFromCommitteeMembershipCommand extends Command
+class InitializeCommitteeMembershipEventsCommand extends Command
 {
-    protected static $defaultName = 'app:generate-committee-membership-events-from-committee-membership';
+    protected static $defaultName = 'app:initialize-committee-membership-events';
 
     /**
      * @var SymfonyStyle
@@ -26,7 +26,7 @@ class GenerateCommitteeMembershipEventsFromCommitteeMembershipCommand extends Co
     private $referentTagRepository;
     private $em;
 
-    const BATCH_SIZE = 30;
+    const BATCH_SIZE = 50;
 
     public function __construct(CommitteeRepository $committeeRepository, ReferentTagRepository $referentTagRepository, EntityManagerInterface $em)
     {
@@ -49,6 +49,12 @@ class GenerateCommitteeMembershipEventsFromCommitteeMembershipCommand extends Co
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        if ($this->isAlreadyInitialize()) {
+            $this->io->error('Impossible to initialize email subscription history. It already exists.');
+
+            return 1;
+        }
+
         /** @var CommitteeMembership $membership */
         $memberships = $this->findAllCommitteeMembership();
 
@@ -71,18 +77,11 @@ class GenerateCommitteeMembershipEventsFromCommitteeMembershipCommand extends Co
                 $membership->getSubscriptionDate()
             );
 
-            if ($this->eventAlreadyInDb($event)) {
-                $this->io->note("Membership '{$membership->getUuid()->toString()}' already recorded as event");
-
-                continue;
-            }
-
             $this->em->persist($event);
-            $this->em->detach($membership);
 
             if (0 === ($i % self::BATCH_SIZE)) {
                 $this->em->flush();
-                $this->em->clear(CommitteeMembershipEvent::class);
+                $this->em->clear();
             }
         }
 
@@ -90,26 +89,14 @@ class GenerateCommitteeMembershipEventsFromCommitteeMembershipCommand extends Co
         $this->em->clear();
         $this->io->progressFinish();
 
-        $this->io->success('Committe membership events created successfuly');
+        $this->io->success('Committee membership events created successfully');
     }
 
-    private function eventAlreadyInDb(CommitteeMembershipEvent $event): bool
+    private function isAlreadyInitialize(): bool
     {
         return 0 < $this->em->createQueryBuilder()
             ->select('count(event)')
             ->from(CommitteeMembershipEvent::class, 'event')
-            ->where('event.action = :action')
-            ->andWhere('event.adherent = :adherent')
-            ->andWhere('event.committee = :committee')
-            ->andWhere('event.tag = :tag')
-            ->andWhere('event.privilege = :privilege')
-            ->andWhere('event.date = :date')
-            ->setParameter('action', $event->getAction())
-            ->setParameter('adherent', $event->getAdherent())
-            ->setParameter('committee', $event->getCommittee())
-            ->setParameter('tag', $event->getTag())
-            ->setParameter('privilege', $event->getPrivilege())
-            ->setParameter('date', $event->getDate())
             ->getQuery()
             ->getSingleScalarResult()
         ;
