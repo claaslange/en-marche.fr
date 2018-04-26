@@ -6,7 +6,6 @@ use AppBundle\Donation\DonationRequest;
 use AppBundle\Donation\PayboxPaymentSubscription;
 use AppBundle\Repository\DonationRepository;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Constraint;
@@ -18,17 +17,12 @@ class UniqueDonationSubscriptionValidator extends ConstraintValidator
     private $donationRepository;
     private $propertyAccessor;
     private $urlGenerator;
-    /**
-     * @var RequestStack
-     */
-    private $requestStack;
 
-    public function __construct(DonationRepository $donationRepository, PropertyAccessor $propertyAccessor, UrlGeneratorInterface $urlGenerator, RequestStack $requestStack)
+    public function __construct(DonationRepository $donationRepository, PropertyAccessor $propertyAccessor, UrlGeneratorInterface $urlGenerator)
     {
         $this->donationRepository = $donationRepository;
         $this->propertyAccessor = $propertyAccessor;
         $this->urlGenerator = $urlGenerator;
-        $this->requestStack = $requestStack;
     }
 
     /**
@@ -54,14 +48,16 @@ class UniqueDonationSubscriptionValidator extends ConstraintValidator
             $criteria[$field] = $this->propertyAccessor->getValue($value, $field);
         }
 
-        if ($donations = $this->donationRepository->findSubscriptions($criteria)) {
+        if ($value->hasSubscription() &&
+            $donations = $this->donationRepository->findBy($criteria)
+        ) {
             $this->context
                 ->buildViolation($constraint->message)
                 ->setParameters([
                     '{{ profile_url }}' => $this->urlGenerator->generate('app_user_profile'),
                     '{{ donation_url }}' => $this->urlGenerator->generate(
                         'donation_informations',
-                        ['montant' => $this->requestStack->getCurrentRequest()->get('montant')]
+                        ['montant' => $value->getAmount()]
                     ),
                 ])
                 ->addViolation()

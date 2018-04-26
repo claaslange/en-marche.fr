@@ -10,7 +10,7 @@ use AppBundle\Exception\InvalidDonationStatusException;
 use Ramsey\Uuid\Uuid;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -42,11 +42,12 @@ class DonationRequestUtils
         // Other
         self::PAYBOX_UNKNOWN => 'error',
     ];
+    private const SESSION_DONATION_REQUEST = 'donation_request';
 
     private $locator;
     private $session;
 
-    public function __construct(ServiceLocator $locator, Session $session)
+    public function __construct(ServiceLocator $locator, SessionInterface $session)
     {
         $this->locator = $locator;
         $this->session = $session;
@@ -57,11 +58,11 @@ class DonationRequestUtils
      */
     public function createFromRequest(Request $request, float $amount, int $duration, ?Adherent $currentUser): DonationRequest
     {
-        $clientIp = $request->getClientIp();
-
-        if ($donation = $this->session->get('donation_request')) {
+        if ($donation = $this->session->get(static::SESSION_DONATION_REQUEST)) {
             return $donation;
         }
+
+        $clientIp = $request->getClientIp();
 
         if ($currentUser) {
             $donation = DonationRequest::createFromAdherent($currentUser, $clientIp, $amount, $duration);
@@ -76,14 +77,14 @@ class DonationRequestUtils
         return $donation;
     }
 
-    public function saveDonationRequest(DonationRequest $donationRequest): void
+    public function startDonationRequest(DonationRequest $donationRequest): void
     {
-        $this->session->set('donation_request', $donationRequest);
+        $this->session->set(static::SESSION_DONATION_REQUEST, $donationRequest);
     }
 
-    public function resetDonationRequest(): void
+    public function terminateDonationRequest(): void
     {
-        $this->session->remove('donation_request');
+        $this->session->remove(static::SESSION_DONATION_REQUEST);
     }
 
     public function buildCallbackParameters()

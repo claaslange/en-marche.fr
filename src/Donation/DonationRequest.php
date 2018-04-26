@@ -20,9 +20,10 @@ use Symfony\Component\Validator\Constraints as Assert;
  *     service="AppBundle\Validator\UniqueDonationSubscriptionValidator",
  *     message="donation.subscription.not_unique",
  *     fields={
- *     "emailAddress",
- *     "duration"
- *     })
+ *         "emailAddress",
+ *         "duration"
+ *     }
+ * )
  */
 class DonationRequest
 {
@@ -338,5 +339,10 @@ class DonationRequest
         }
 
         return $phone;
+    }
+
+    public function hasSubscription(): bool
+    {
+        return PayboxPaymentSubscription::NONE !== $this->duration;
     }
 }

@@ -33,13 +33,4 @@ class DonationRepository extends ServiceEntityRepository
             ['donatedAt' => $order]
         );
     }
-
-    public function findSubscriptions(array $criteria): array
-    {
-        if (PayboxPaymentSubscription::NONE === $criteria['duration']) {
-            return [];
-        }
-
-        return $this->findBy($criteria);
-    }
 }

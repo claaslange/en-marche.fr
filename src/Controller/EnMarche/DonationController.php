@@ -64,14 +64,14 @@ class DonationController extends Controller
 
         if ($form->handleRequest($request)->isSubmitted() && $form->isValid()) {
             $this->get('app.donation_request.handler')->handle($donationRequest);
-            $donationRequestUtils->resetDonationRequest();
+            $donationRequestUtils->terminateDonationRequest();
 
             return $this->redirectToRoute('donation_pay', [
                 'uuid' => $donationRequest->getUuid()->toString(),
             ]);
         }
 
-        $donationRequestUtils->saveDonationRequest($donationRequest);
+        $donationRequestUtils->startDonationRequest($donationRequest);
 
         return $this->render('donation/informations.html.twig', [
             'form' => $form->createView(),
