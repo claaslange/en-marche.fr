@@ -140,14 +140,13 @@ class DonationController extends Controller
 
     /**
      * @Route(
-     *     "/mensuel/cancel",
+     *     "/mensuel/annuler",
      *     defaults={"_enable_campaign_silence"=true},
      *     name="donation_subscription_cancel"
      * )
      * @Method("GET")
-     * // TODO: make test
      */
-    public function cancelSubscriptionAction(Request $request, DonationRepository $donationRepository, PayboxPaymentUnsubscription $payboxPaymentUnsubscription): RedirectResponse
+    public function cancelSubscriptionAction(DonationRepository $donationRepository, PayboxPaymentUnsubscription $payboxPaymentUnsubscription): RedirectResponse
     {
         $donations = $donationRepository->findAllSubscribedDonationByEmail($this->getUser()->getEmailAddress());
 

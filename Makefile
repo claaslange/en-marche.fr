@@ -186,7 +186,7 @@ up:
 	$(DOCKER_COMPOSE) up -d --remove-orphans
 
 perm:
-	$(EXEC) chmod 666 var app/migrations/*
+	$(EXEC) chmod 666 app/migrations/*
 	$(EXEC) chmod -R 777 var app/data/images
 	$(EXEC) chown -R www-data:root var
 	$(EXEC) chmod 660 var/public.key var/private.key

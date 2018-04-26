@@ -2,18 +2,11 @@
 
 namespace AppBundle\Exception;
 
+use AppBundle\Donation\PayboxPaymentUnsubscriptionErrorEnum;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class PayboxPaymentUnsubscriptionException extends BadRequestHttpException
 {
-    public const MAP_ERRORS = [
-        1 => 'Incident technique (Configuration)',
-        2 => 'Données non cohérentes',
-        3 => 'Incident technique (Accès à la base de données)',
-        4 => 'Site inconnu',
-        9 => 'Echec de la résiliation. Aucun abonnement résilié',
-    ];
-
     private $codeError;
 
     public function __construct(int $codeError, \Exception $previous = null, $code = 0)
@@ -22,8 +15,8 @@ class PayboxPaymentUnsubscriptionException extends BadRequestHttpException
 
         $errorMessage = 'Error unknown';
 
-        if (array_key_exists($codeError, static::MAP_ERRORS)) {
-            $errorMessage = static::MAP_ERRORS[$codeError];
+        if (PayboxPaymentUnsubscriptionErrorEnum::isValidKey($key = "ERROR_$codeError")) {
+            $errorMessage = PayboxPaymentUnsubscriptionErrorEnum::$key();
         }
 
         parent::__construct(sprintf('%d: %s', $codeError, $errorMessage), $previous, $code);

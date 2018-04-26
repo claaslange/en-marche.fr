@@ -116,7 +116,6 @@ class DonationRequestUtils
         ];
     }
 
-    // TODO: create a test
     public function buildDonationReference(Donation $donation): string
     {
         return $donation->getUuid()->toString()

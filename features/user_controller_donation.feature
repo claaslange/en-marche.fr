@@ -17,9 +17,9 @@ Feature: Test donation page
     And I should see "Votre dernier don a été fait"
     And I should see "50 €"
     And I should not see "Faire un nouveau don"
-    And I should see "Arréter mon don mensuel"
+    And I should see "Arrêter mon don mensuel"
 
-    When I follow "Arréter mon don mensuel"
+    When I follow "Arrêter mon don mensuel"
     Then I should be on "/parametres/mon-compte/mes-dons"
 
   Scenario: Be able to navigate in my donation page as an adherent without monthly donations
@@ -32,7 +32,7 @@ Feature: Test donation page
     And I should see "Votre dernier don a été fait"
     And I should see "50 €"
     And I should see "Faire un nouveau don"
-    And I should not see "Arréter mon don mensuel"
+    And I should not see "Arrêter mon don mensuel"
 
     When I follow "Faire un nouveau don"
     Then I should be on "/don"

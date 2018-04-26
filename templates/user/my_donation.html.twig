@@ -18,7 +18,7 @@
             Merci pour votre engagement à nos côtés ! <br/>
             Votre dernier don a été fait {{ donations|first.donatedAt|ago }}.
             {% if subscribed_donations %}
-                <a href="{{ path('donation_subscription_cancel') }}">Arréter mon don mensuel</a>.
+                <a href="{{ path('donation_subscription_cancel') }}">Arrêter mon don mensuel</a>.
                 Prochaine échéance du don mensuel de {{ subscribed_donations|first.amountInEuros }}€ le {{ subscribed_donations|first.nextDonationAt|date('d M Y') }}
             {% else %}
                 <a href="{{ path('donation_index') }}">Faire un nouveau don</a>.
@@ -58,14 +58,14 @@
                         <td>
                             {% if donation.duration %}
                                 {% if donation.subscriptionEndedAt %}
-                                    Souscription don mensuel arrété le {{ donation.subscriptionEndedAt|date('d M Y h:i') }}
+                                    Souscription don mensuel arrêtée le {{ donation.subscriptionEndedAt|date('d M Y h:i') }}
                                 {% else %}
                                     Souscription don mensuel.
                                 {% endif %}
                             {% else %}
                                 Don ponctuel
                             {% endif %}
-                        </td
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
