@@ -34,6 +34,7 @@ class CommitteeMembershipEvent
      * @var Committee|null
      *
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Committee", cascade={"persist"})
+     * @ORM\JoinColumn(onDelete="SET NULL")
      */
     private $committee;
 
@@ -41,6 +42,7 @@ class CommitteeMembershipEvent
      * @var Adherent|null
      *
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\Adherent")
+     * @ORM\JoinColumn(onDelete="SET NULL")
      */
     private $adherent;
 
@@ -48,6 +50,7 @@ class CommitteeMembershipEvent
      * @var ReferentTag|null
      *
      * @ORM\ManyToOne(targetEntity="AppBundle\Entity\ReferentTag")
+     * @ORM\JoinColumn(nullable=false)
      */
     private $tag;
 
@@ -76,7 +79,7 @@ class CommitteeMembershipEvent
      */
     private $date;
 
-    public function __construct(CommitteeMembership $committeeMembership, ?Committee $committee, ?ReferentTag $tag, CommitteeMembershipAction $action, \DateTimeInterface $date = null)
+    public function __construct(CommitteeMembership $committeeMembership, ?Committee $committee, ReferentTag $tag, CommitteeMembershipAction $action, \DateTimeInterface $date = null)
     {
         if ($committee && !$committee->getUuid()->equals($committeeMembership->getCommitteeUuid())) {
             throw new \InvalidArgumentException('Committee UUIDs mismatch');
@@ -110,7 +113,7 @@ class CommitteeMembershipEvent
         return $this->adherent;
     }
 
-    public function getTag(): ?ReferentTag
+    public function getTag(): ReferentTag
     {
         return $this->tag;
     }

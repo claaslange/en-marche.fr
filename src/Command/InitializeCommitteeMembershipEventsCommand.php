@@ -50,7 +50,7 @@ class InitializeCommitteeMembershipEventsCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         if ($this->isAlreadyInitialize()) {
-            $this->io->error('Impossible to initialize email subscription history. It already exists.');
+            $this->io->error('Cannot initialize committee membership events. It already exists.');
 
             return 1;
         }
@@ -65,14 +65,14 @@ class InitializeCommitteeMembershipEventsCommand extends Command
             $this->io->progressAdvance();
             $committee = $this->committeeRepository->findOneByUuid($membership->getCommitteeUuid()->toString());
 
-            if ($committee) {
-                $tag = $this->referentTagRepository->findOneByCode(ManagedAreaUtils::getCodeFromCommittee($committee));
+            if (!$committee) {
+                continue;
             }
 
             $event = new CommitteeMembershipEvent(
                 $membership,
                 $committee,
-                $tag ?? null,
+                $this->referentTagRepository->findOneByCode(ManagedAreaUtils::getCodeFromCommittee($committee)),
                 CommitteeMembershipAction::JOIN(),
                 $membership->getSubscriptionDate()
             );
@@ -102,9 +102,6 @@ class InitializeCommitteeMembershipEventsCommand extends Command
         ;
     }
 
-    /**
-     * @return \Doctrine\ORM\Internal\Hydration\IterableResult
-     */
     protected function findAllCommitteeMembership(): \Doctrine\ORM\Internal\Hydration\IterableResult
     {
         return $this->em->createQueryBuilder()
