@@ -9,6 +9,7 @@ use AppBundle\Referent\ManagedAreaUtils;
 use AppBundle\Repository\CommitteeRepository;
 use AppBundle\Repository\ReferentTagRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Internal\Hydration\IterableResult;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -102,7 +103,7 @@ class InitializeCommitteeMembershipEventsCommand extends Command
         ;
     }
 
-    protected function findAllCommitteeMembership(): \Doctrine\ORM\Internal\Hydration\IterableResult
+    protected function findAllCommitteeMembership(): IterableResult
     {
         return $this->em->createQueryBuilder()
             ->select('membership')
