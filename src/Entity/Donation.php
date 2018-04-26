@@ -271,6 +271,10 @@ class Donation implements GeoPointInterface
 
     public function nextDonationAt(): \DateTime
     {
+        if (!$this->hasSubscription()) {
+            throw new \LogicException('Donation without subscription can\'t have next donation date.');
+        }
+
         $day = $this->donatedAt->format('d');
         $dayNow = date('d');
         if ($day > $dayNow) {

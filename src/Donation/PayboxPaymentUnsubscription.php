@@ -27,8 +27,8 @@ class PayboxPaymentUnsubscription
      */
     public function unsubscribe(Donation $donation): void
     {
-        $result = $this->request->cancel($this->donationRequestUtils->buildDonationReference($donation));
-        $result = $this->convertStrToArray($result);
+        $result = [];
+        parse_str($this->request->cancel($this->donationRequestUtils->buildDonationReference($donation)), $result);
 
         if ('OK' !== $result['ACQ']) {
             throw new PayboxPaymentUnsubscriptionException($result['ERREUR']);
@@ -40,18 +40,5 @@ class PayboxPaymentUnsubscription
     public function sendConfirmationMessage(Donation $donation, Adherent $adherent): void
     {
         $this->mailer->sendMessage(PayboxPaymentUnsubscriptionConfirmationMessage::create($adherent, $donation));
-    }
-
-    private function convertStrToArray(string $str): array
-    {
-        $result = [];
-
-        $items = explode('&', $str);
-        foreach ($items as $item) {
-            [$key, $value] = explode('=', $item);
-            $result[$key] = $value;
-        }
-
-        return $result;
     }
 }
